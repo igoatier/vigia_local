@@ -1,0 +1,16 @@
+{
+  "short_name": "VigiaCheck",
+  "name": "Vigia Check - Ronda Noturna",
+  "icons": [
+    {
+      "src": "https://base44.com/logo_v2.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0b0e14",
+  "theme_color": "#0b0e14",
+  "display": "standalone"
+}
+

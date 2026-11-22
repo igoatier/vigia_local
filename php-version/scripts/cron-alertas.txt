@@ -1,0 +1,6 @@
+# Execute no crontab do usuário do servidor Linux.
+# Ajuste o caminho do PHP e da aplicação.
+
+35 0 * * * /usr/bin/php /var/www/vigiacheck/php-version/scripts/monitorar_rondas.php --ronda=1 >> /var/log/vigiacheck-alertas.log 2>&1
+35 2 * * * /usr/bin/php /var/www/vigiacheck/php-version/scripts/monitorar_rondas.php --ronda=2 >> /var/log/vigiacheck-alertas.log 2>&1
+35 4 * * * /usr/bin/php /var/www/vigiacheck/php-version/scripts/monitorar_rondas.php --ronda=3 >> /var/log/vigiacheck-alertas.log 2>&1

@@ -1,0 +1,37 @@
+{
+  "id": "./index.php",
+  "name": "VigiaCheck - Ronda Noturna",
+  "short_name": "VigiaCheck",
+  "description": "Registro de rondas noturnas com foto e localização.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./index.php?page=ronda",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#0b0e14",
+  "theme_color": "#0b0e14",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Iniciar ronda",
+      "short_name": "Ronda",
+      "url": "./index.php?page=ronda",
+      "icons": [{ "src": "./assets/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Histórico",
+      "short_name": "Histórico",
+      "url": "./index.php?page=historico",
+      "icons": [{ "src": "./assets/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}
