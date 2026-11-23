@@ -4,9 +4,9 @@ declare(strict_types=1);
 // ─── Configuração do banco MySQL ────────────────────────────────────────────
 const DB_HOST = 'localhost';
 const DB_PORT = 3306;
-const DB_NAME = 'vigia_check';
-const DB_USER = 'root';
-const DB_PASS = 'root';
+const DB_NAME = '';
+const DB_USER = '';
+const DB_PASS = '';
 
 // ─── Alertas de rondas ───────────────────────────────────────────────────────
 // Em hospedagem Linux, habilite e configure o MTA/SMTP do servidor.
