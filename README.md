@@ -1,4 +1,4 @@
-﻿# VigiaCheck V2 — Sistema de controle de rondas em PHP
+# VigiaCheck V2 — Sistema de controle de rondas em PHP
 
 Aplicação web independente para controle de rondas de vigilância, desenvolvida em **PHP 8+, MySQL/MariaDB, HTML, CSS e JavaScript nativo**. A versão atual não depende de React, Base44, Node.js ou de um backend externo.
 
@@ -37,6 +37,7 @@ A V2 moderniza a aplicação para uso em celular e inclui:
 - Proteção CSRF nas ações POST;
 - Validação de sessão e permissões no servidor;
 - Tratamento seguro dos arquivos de foto;
+- Foto opcional do local no cadastro de cada posto;
 - Migrações para instalações existentes.
 
 ---
@@ -114,7 +115,8 @@ php-version/
 │   ├── 001_add_moderador.sql
 │   ├── 002_add_sync_id.sql
 │   ├── 003_alertas_ronda.sql
-│   └── 004_escala_semanal.sql
+│   ├── 004_escala_semanal.sql
+│   └── 005_foto_local_posto.sql
 ├── lib/
 │   ├── alertas.php             # Alertas, e-mail e escala semanal
 │   ├── auth.php                # Sessão, autenticação e permissões
@@ -364,6 +366,12 @@ Quando a conexão retorna:
 
 A compressão da imagem ocorre no aparelho por Canvas, reduzindo o tamanho sem alterar significativamente a qualidade visual necessária para conferência.
 
+### Foto do local do posto
+
+Administradores podem fotografar o local durante o cadastro ou edição de um posto. A foto é opcional, pode ser capturada pela câmera traseira do celular, possui pré-visualização e é exibida na lista de postos. A foto do local fica armazenada separadamente das fotos dos registros de ronda, no campo `postos.foto_local`.
+
+Na edição, se nenhuma nova imagem for escolhida, a foto anterior é preservada. Se uma nova foto for enviada, a anterior é substituída. A aplicação aceita JPEG, PNG e WebP até o limite configurado em `MAX_UPLOAD_BYTES`.
+
 ---
 
 ## 11. Escala semanal
@@ -570,7 +578,8 @@ A versão V2 corrige e moderniza os seguintes pontos:
 24. Foi criada a escala semanal para os responsáveis de segunda a domingo.
 25. A escala semanal passou a ter prioridade sobre a identificação pelo primeiro registro.
 26. Foram adicionadas migrações para o moderador, sincronização, alertas e escala.
-27. Todos os arquivos PHP alterados foram validados com `php -l`.
+27. Foi adicionada a foto opcional do local no cadastro dos postos.
+28. Todos os arquivos PHP alterados foram validados com `php -l`.
 
 ---
 

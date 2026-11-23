@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vigiacheck-static-v2';
+const CACHE_NAME = 'vigiacheck-static-v3';
 const STATIC_ASSETS = [
   './assets/app.css',
   './assets/icon.svg',

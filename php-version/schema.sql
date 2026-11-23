@@ -1,8 +1,8 @@
 -- VigiaCheck · banco de dados MySQL
 -- Importe este arquivo no phpMyAdmin (aba "Importar") antes de abrir install.php
 
-CREATE DATABASE IF NOT EXISTS vigia_check CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE vigia_check;
+CREATE DATABASE IF NOT EXISTS ptechne1_vigiacheckV2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE ptechne1_vigiacheckV2;
 
 CREATE TABLE IF NOT EXISTS usuarios (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS postos (
   endereco VARCHAR(180) DEFAULT NULL,
   latitude DECIMAL(10, 7) NOT NULL,
   longitude DECIMAL(10, 7) NOT NULL,
+  foto_local VARCHAR(255) DEFAULT NULL,
   raio_metros INT UNSIGNED NOT NULL DEFAULT 1,
   ordem INT UNSIGNED NOT NULL DEFAULT 1,
   ativo TINYINT(1) NOT NULL DEFAULT 1,

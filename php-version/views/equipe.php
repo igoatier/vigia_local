@@ -16,6 +16,14 @@ $rotulosPapel = [
 
 layout_inicio('Equipe', count($usuarios) . (count($usuarios) === 1 ? ' pessoa' : ' pessoas'));
 ?>
+<?php if ($ehAdmin || $ehModerador): ?>
+<section class="card">
+  <h2 class="card-titulo">Acompanhamento das rondas</h2>
+  <p class="muted pequeno">Consulte rondas atrasadas, postos pendentes, justificativas e a escala semanal.</p>
+  <a class="btn btn-secundario" href="index.php?page=alertas">Abrir alertas de rondas</a>
+</section>
+<?php endif; ?>
+
 <section class="card">
   <h2 class="card-titulo">Novo acesso</h2>
   <p class="muted pequeno">

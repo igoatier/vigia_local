@@ -89,7 +89,24 @@ function layout_fim(string $ativo): void
   const install = document.getElementById('pwa-install');
   const installButton = document.getElementById('pwa-install-btn');
   const closeButton = document.getElementById('pwa-close');
+  const chaveDispensado = 'vigia-pwa-install-dismissed';
+  const chaveInstalado = 'vigia-pwa-installed';
+  const chaveExibidoSessao = 'vigia-pwa-install-session-shown';
   let deferredPrompt = null;
+
+  const estaInstalado = () => {
+    const modoStandalone = window.matchMedia?.('(display-mode: standalone)').matches;
+    const modoIos = window.navigator.standalone === true;
+    return Boolean(modoStandalone || modoIos || localStorage.getItem(chaveInstalado) === '1');
+  };
+
+  const ocultarInstalacao = () => {
+    if (install) install.hidden = true;
+  };
+
+  if (estaInstalado() || localStorage.getItem(chaveDispensado) === '1' || sessionStorage.getItem(chaveExibidoSessao) === '1') {
+    ocultarInstalacao();
+  }
 
   const atualizarConexao = () => { if (offline) offline.hidden = navigator.onLine; };
   window.addEventListener('online', atualizarConexao);
@@ -97,22 +114,39 @@ function layout_fim(string $ativo): void
   atualizarConexao();
 
   window.addEventListener('beforeinstallprompt', (event) => {
+    if (estaInstalado() || localStorage.getItem(chaveDispensado) === '1' || sessionStorage.getItem(chaveExibidoSessao) === '1') {
+      deferredPrompt = null;
+      ocultarInstalacao();
+      return;
+    }
     event.preventDefault();
     deferredPrompt = event;
-    if (!localStorage.getItem('vigia-pwa-install-dismissed') && install) install.hidden = false;
+    sessionStorage.setItem(chaveExibidoSessao, '1');
+    if (install) install.hidden = false;
   });
 
   installButton?.addEventListener('click', async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
+    const escolha = await deferredPrompt.userChoice;
     deferredPrompt = null;
-    install.hidden = true;
+    if (escolha?.outcome === 'accepted') {
+      localStorage.setItem(chaveInstalado, '1');
+    }
+    ocultarInstalacao();
   });
 
   closeButton?.addEventListener('click', () => {
-    localStorage.setItem('vigia-pwa-install-dismissed', '1');
-    install.hidden = true;
+    localStorage.setItem(chaveDispensado, '1');
+    deferredPrompt = null;
+    ocultarInstalacao();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    localStorage.setItem(chaveInstalado, '1');
+    localStorage.removeItem(chaveDispensado);
+    deferredPrompt = null;
+    ocultarInstalacao();
   });
 
   if ('serviceWorker' in navigator) {

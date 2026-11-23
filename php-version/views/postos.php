@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/layout.php';
 
 $ehAdmin = eh_admin();
+garantir_foto_local_postos();
 $editarId = $ehAdmin ? (int) ($_GET['editar'] ?? 0) : 0;
 $postos = db()->query('SELECT * FROM postos WHERE ativo = 1 ORDER BY ordem, nome')->fetchAll();
 
@@ -25,7 +26,7 @@ layout_inicio('Postos', count($postos) . (count($postos) === 1 ? ' local' : ' lo
 <section class="card">
   <h2 class="card-titulo"><?= $editando ? 'Editar posto' : 'Novo posto' ?></h2>
 
-  <form method="post" action="actions/posto.php" class="form" id="form-posto">
+  <form method="post" action="actions/posto.php" class="form" id="form-posto" enctype="multipart/form-data">
     <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
     <input type="hidden" name="acao" value="salvar">
     <input type="hidden" name="id" value="<?= $editando ? (int) $editando['id'] : 0 ?>">
@@ -39,6 +40,17 @@ layout_inicio('Postos', count($postos) . (count($postos) === 1 ? ' local' : ' lo
       <span>Endereço / referência</span>
       <input type="text" name="endereco" maxlength="180" value="<?= e($editando['endereco'] ?? '') ?>" placeholder="Bloco B — fundos">
     </label>
+
+    <label class="foto foto-posto" for="foto-local">
+      <?php if (!empty($editando['foto_local'])): ?>
+        <img id="foto-local-preview" src="index.php?page=foto&posto_id=<?= (int) $editando['id'] ?>" alt="Foto atual do local">
+      <?php else: ?>
+        <span class="foto-texto" id="foto-local-texto">Fotografar local do posto</span>
+        <img id="foto-local-preview" alt="Pré-visualização da foto do local" hidden>
+      <?php endif; ?>
+      <input type="file" name="foto_local" id="foto-local" accept="image/*" capture="environment">
+    </label>
+    <p class="muted pequeno">Opcional. Use a câmera para registrar uma referência visual do local.</p>
 
     <button class="btn btn-secundario" type="button" id="usar-localizacao">Usar minha localização atual</button>
 
@@ -90,6 +102,9 @@ layout_inicio('Postos', count($postos) . (count($postos) === 1 ? ' local' : ' lo
             <p class="muted pequeno mono"><?= e((string) $posto['latitude']) ?>, <?= e((string) $posto['longitude']) ?> · raio <?= (int) $posto['raio_metros'] ?> m</p>
           </div>
         </div>
+        <?php if (!empty($posto['foto_local'])): ?>
+          <img class="posto-foto" src="index.php?page=foto&posto_id=<?= (int) $posto['id'] ?>" alt="Foto do local do posto <?= e($posto['nome']) ?>" loading="lazy">
+        <?php endif; ?>
         <?php if ($ehAdmin): ?>
           <div class="posto-acoes">
             <a class="posto-acao" href="index.php?page=postos&editar=<?= (int) $posto['id'] ?>">Editar</a>
@@ -126,6 +141,17 @@ if (botaoLocalizacao) botaoLocalizacao.addEventListener('click', function () {
     botao.textContent = 'Usar minha localização atual';
     alert('Não foi possível obter a localização. Autorize o GPS e tente novamente.');
   }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+});
+
+const campoFotoLocal = document.getElementById('foto-local');
+const previewFotoLocal = document.getElementById('foto-local-preview');
+const textoFotoLocal = document.getElementById('foto-local-texto');
+if (campoFotoLocal && previewFotoLocal) campoFotoLocal.addEventListener('change', function () {
+  const arquivo = this.files?.[0];
+  if (!arquivo) return;
+  previewFotoLocal.src = URL.createObjectURL(arquivo);
+  previewFotoLocal.hidden = false;
+  if (textoFotoLocal) textoFotoLocal.hidden = true;
 });
 </script>
 

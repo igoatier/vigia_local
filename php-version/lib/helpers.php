@@ -109,3 +109,15 @@ function flash_pegar(): ?array
     unset($_SESSION['flash']);
     return $flash;
 }
+
+function garantir_foto_local_postos(): void
+{
+    static $pronto = false;
+    if ($pronto) return;
+
+    $coluna = db()->query("SHOW COLUMNS FROM postos LIKE 'foto_local'")->fetch();
+    if (!$coluna) {
+        db()->exec('ALTER TABLE postos ADD COLUMN foto_local VARCHAR(255) DEFAULT NULL AFTER longitude');
+    }
+    $pronto = true;
+}
