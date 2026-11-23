@@ -401,6 +401,7 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
+input[type="time"],
 select,
 textarea {
   width: 100%;
@@ -411,6 +412,18 @@ textarea {
   color: var(--fg);
   font-family: inherit;
   font-size: 14px;
+}
+
+input[type="time"] {
+  color-scheme: dark;
+  min-height: 43px;
+  appearance: auto;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.82);
+  opacity: 0.85;
+  cursor: pointer;
 }
 
 input:focus,
