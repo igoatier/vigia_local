@@ -14,6 +14,7 @@ $alertas = buscar_alertas($filtros);
 $usuarioId = (int) usuario_atual()['id'];
 $escala = buscar_escala_semanal();
 $vigias = pode_gerenciar_equipe() ? vigias_ativos_para_escala() : [];
+$rondasConfiguradas = rondas_todas();
 $diasSemana = [1 => 'Segunda-feira', 2 => 'Terça-feira', 3 => 'Quarta-feira', 4 => 'Quinta-feira', 5 => 'Sexta-feira', 6 => 'Sábado', 7 => 'Domingo'];
 
 layout_inicio('Alertas de rondas', 'Administrativo');
@@ -24,7 +25,7 @@ layout_inicio('Alertas de rondas', 'Administrativo');
     <div>
       <p class="progresso-kicker">Responsável pelo turno</p>
       <h2>Escala semanal</h2>
-      <p class="muted pequeno">A escala vale para as três rondas da noite. A data do turno define o dia da semana usado no alerta.</p>
+      <p class="muted pequeno">A escala vale para todos os horários ativos. A data do turno define o dia da semana usado no alerta.</p>
     </div>
   </div>
   <?php if (!$vigias): ?>
@@ -55,7 +56,7 @@ layout_inicio('Alertas de rondas', 'Administrativo');
 <section class="secao-topo alertas-topo">
   <div>
     <h2>Rondas não concluídas</h2>
-    <p class="muted pequeno">Alertas gerados após 35 minutos com postos pendentes.</p>
+    <p class="muted pequeno">Alertas gerados após a tolerância configurada, com postos pendentes.</p>
   </div>
   <form method="get" class="alertas-filtro">
     <input type="hidden" name="page" value="alertas">
@@ -83,7 +84,7 @@ layout_inicio('Alertas de rondas', 'Administrativo');
       <article class="card alerta <?= $alerta['status'] === 'resolvido' ? 'alerta-resolvido' : '' ?>">
         <div class="alerta-cabecalho">
           <div>
-            <p class="progresso-kicker">Ronda <?= e(RONDAS[(int) $alerta['ronda']] ?? '') ?></p>
+            <p class="progresso-kicker">Ronda <?= e($rondasConfiguradas[(int) $alerta['ronda']]['horario'] ?? ('#' . (int) $alerta['ronda'])) ?></p>
             <h3><?= e($alerta['mensagem']) ?></h3>
           </div>
           <span class="selo <?= $alerta['status'] === 'resolvido' ? 'selo-ok' : ($alerta['status'] === 'justificado' ? 'selo-moderador' : 'selo-alerta') ?>">

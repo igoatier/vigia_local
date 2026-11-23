@@ -1,6 +1,6 @@
 # VigiaCheck · versão PHP 8 + MySQL
 
-Sistema de rondas noturnas para vigias: registro de pontos com foto e GPS, três rondas por noite (00:00, 02:00 e 04:00), histórico completo para o administrador e gestão de postos e vigias.
+Sistema de rondas noturnas para vigias: registro de pontos com foto e GPS, horários de ronda configuráveis, histórico completo para o administrador e gestão de postos e vigias.
 
 > Esta pasta (`php-version/`) é um projeto independente. Ela **não** roda dentro do Base44 — copie os arquivos para um servidor com PHP e MySQL (Hostinger, KingHost, Locaweb, cPanel, VPS etc.).
 
@@ -13,7 +13,7 @@ Sistema de rondas noturnas para vigias: registro de pontos com foto e GPS, três
 ## Instalação (5 passos)
 
 1. **Envie os arquivos** desta pasta para o servidor (ex.: `public_html/vigia/`).
-2. **Crie o banco**: no phpMyAdmin, aba *Importar*, selecione `schema.sql` e execute. Isso cria o banco `vigia_check` com as tabelas `usuarios`, `postos` e `registros`.
+2. **Crie o banco**: no phpMyAdmin, aba *Importar*, selecione `schema.sql` e execute. Isso cria o banco `vigia_check` com as tabelas `usuarios`, `postos`, `registros`, `rondas` e alertas.
 3. **Configure a conexão** em `config.php`: `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`.
 4. **Crie o administrador**: abra `https://SEU-DOMINIO/vigia-check/install.php`, preencha nome, e-mail e senha. Depois **apague o `install.php`** do servidor.
 5. **Entre** em `index.php?page=login`. No primeiro acesso, cadastre os postos (aba *Postos*) usando o botão “Usar minha localização atual”.
@@ -23,7 +23,7 @@ Permissões da pasta `uploads/`: `chmod 775` (ou `755` se o PHP rodar como o mes
 ## Como funciona
 
 - **Turno**: começa às 18h e vai até a manhã seguinte. Registros feitos entre 00:00 e 11:59 são contabilizados na noite anterior.
-- **Rondas**: cada posto precisa ser registrado três vezes — 00:00, 02:00 e 04:00. A aba *Ronda* mostra as três, e cada ponto concluído fica marcado com a hora.
+- **Rondas**: cada posto precisa ser registrado uma vez para cada horário ativo. Os padrões são 00:00, 02:00 e 04:00, mas o administrador pode criar, editar, ordenar e desativar horários em `index.php?page=horarios`. Horários desativados não aceitam novos registros e não são apagados, preservando o histórico.
 - **Registro**: no celular, abre a câmera (`capture="environment"`), pega a latitude/longitude pelo GPS e calcula a distância até o posto. Fora do raio do posto o registro é aceito, mas fica marcado como “Fora do raio”.
 - **Histórico**: o vigia vê os próprios registros; o administrador vê os de todos e filtra por vigia e por posto.
 - **Equipe**: o administrador cria o login de cada vigia (nome, e-mail e senha inicial) e alterna entre *vigia* e *admin*.
@@ -32,17 +32,17 @@ Permissões da pasta `uploads/`: `chmod 775` (ou `755` se o PHP rodar como o mes
 
 | Papel | Pode |
 | --- | --- |
-| `vigia` | Registrar pontos das três rondas e ver o próprio histórico |
+| `vigia` | Registrar pontos dos horários ativos e ver o próprio histórico |
 | `moderador` | Cadastrar e editar vigias e moderadores, incluindo nome, e-mail, senha e perfil; não pode criar, editar ou promover administradores |
 | `admin` | Tudo do vigia + cadastrar/editar/excluir postos, ver todos os registros e gerenciar todos os perfis da equipe |
 
-Em instalações existentes, execute uma vez o arquivo `migrations/001_add_moderador.sql` no banco antes de criar o primeiro moderador. Instalações novas já recebem o perfil pelo `schema.sql`.
+Em instalações existentes, execute uma vez os arquivos de `migrations/001_add_moderador.sql` até `migrations/006_rondas_configuraveis.sql` no banco. A migração 006 cria os três horários padrão sem apagar registros existentes. Se não for possível executar a migração pelo terminal, a aplicação também garante a criação da tabela e dos padrões ao acessar as funções de rondas.
 
 ## Estrutura de arquivos
 
 ```
 php-version/
-├─ index.php              roteador (?page=ronda|historico|postos|equipe|registrar|foto|login|sair)
+├─ index.php              roteador (?page=ronda|horarios|historico|postos|equipe|registrar|foto|login|sair)
 ├─ install.php            cria o primeiro administrador (apague após usar)
 ├─ config.php             conexão MySQL, fuso horário, upload
 ├─ schema.sql             tabelas do banco
@@ -51,8 +51,8 @@ php-version/
 │  ├─ auth.php            login, sessão, papéis
 │  ├─ helpers.php         distância (Haversine), rondas, CSRF, flashes, formatação
 │  └─ foto.php            entrega a foto somente ao dono ou ao admin
-├─ views/                 telas (layout, login, ronda, registrar, historico, postos, equipe)
-├─ actions/               POST: conta.php, posto.php, registro.php
+├─ views/                 telas (layout, login, ronda, horarios, registrar, historico, postos, equipe)
+├─ actions/               POST: conta.php, horario.php, posto.php, registro.php
 ├─ assets/app.css         tema escuro mobile-first
 └─ uploads/               fotos (acesso direto bloqueado por .htaccess)
 ```

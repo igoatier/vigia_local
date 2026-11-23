@@ -14,6 +14,9 @@ function abas(): array
     if (pode_gerenciar_equipe()) {
         $abas[] = ['equipe', 'Equipe', 'index.php?page=equipe'];
     }
+    if (eh_admin()) {
+        $abas[] = ['horarios', 'Horários', 'index.php?page=horarios'];
+    }
     return $abas;
 }
 

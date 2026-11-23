@@ -59,7 +59,11 @@ try {
     }
 
     $postoId = (int) ($_POST['posto_id'] ?? 0);
-    $ronda = max(1, min(3, (int) ($_POST['ronda'] ?? 1)));
+    $ronda = (int) ($_POST['ronda'] ?? 0);
+    $rondaConfiguracao = ronda_configuracao($ronda);
+    if (!$rondaConfiguracao) {
+        responder_json(false, 'ronda_invalida', 'O horário da ronda não existe ou está desativado.', 422);
+    }
     $latitude = (float) str_replace(',', '.', (string) ($_POST['latitude'] ?? ''));
     $longitude = (float) str_replace(',', '.', (string) ($_POST['longitude'] ?? ''));
     $precisao = max(0, (int) ($_POST['precisao'] ?? 0));
@@ -117,7 +121,7 @@ try {
             $postoId,
             (int) usuario_atual()['id'],
             $ronda,
-            RONDAS[$ronda],
+            $rondaConfiguracao['horario'],
             $latitude,
             $longitude,
             $precisao,

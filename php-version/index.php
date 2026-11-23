@@ -34,6 +34,11 @@ switch ($page) {
         require __DIR__ . '/views/postos.php';
         break;
 
+    case 'horarios':
+        exigir_admin();
+        require __DIR__ . '/views/horarios.php';
+        break;
+
     case 'equipe':
         exigir_gestor_equipe();
         require __DIR__ . '/views/equipe.php';

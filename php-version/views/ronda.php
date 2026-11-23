@@ -4,7 +4,8 @@ declare(strict_types=1);
 require __DIR__ . '/layout.php';
 
 $usuario = usuario_atual();
-$rondaSolicitada = isset($_GET['ronda']) ? max(1, min(3, (int) $_GET['ronda'])) : null;
+$rondas = rondas_ativas();
+$rondaSolicitada = isset($_GET['ronda']) ? (int) $_GET['ronda'] : null;
 $turno = turno_data();
 
 $postos = db()->query('SELECT * FROM postos WHERE ativo = 1 ORDER BY ordem, nome')->fetchAll();
@@ -28,24 +29,24 @@ foreach ($stmt->fetchAll() as $linha) {
     }
 }
 
-$porRonda = [1 => 0, 2 => 0, 3 => 0];
+$porRonda = array_fill_keys(array_keys($rondas), 0);
 foreach (array_keys($registrados) as $chave) {
     $partes = explode(':', (string) $chave);
     $numRonda = (int) $partes[0];
-    if (isset($porRonda[$numRonda])) {
+    if (array_key_exists($numRonda, $porRonda)) {
         $porRonda[$numRonda]++;
     }
 }
 
 // Sem uma ronda informada pela URL, segue automaticamente para a primeira ronda incompleta.
 // Assim, ao concluir 00:00, a tela abre 02:00; depois, 04:00.
-if ($rondaSolicitada !== null) {
+if ($rondaSolicitada !== null && isset($rondas[$rondaSolicitada])) {
     $rondaSelecionada = $rondaSolicitada;
 } elseif (!$postos) {
     $rondaSelecionada = ronda_atual();
 } else {
     $rondaSelecionada = ronda_atual();
-    foreach (RONDAS as $numero => $horario) {
+    foreach ($rondas as $numero => $ronda) {
         if ($porRonda[$numero] < count($postos)) {
             $rondaSelecionada = $numero;
             break;
@@ -53,8 +54,12 @@ if ($rondaSolicitada !== null) {
     }
 }
 
+if (!isset($rondas[$rondaSelecionada])) {
+    $rondaSelecionada = (int) array_key_first($rondas);
+}
+
 $feitos = array_sum($porRonda);
-$total = count($postos) * 3;
+$total = count($postos) * count($rondas);
 $pct = $total > 0 ? (int) round($feitos / $total * 100) : 0;
 
 if ($total === 0) {
@@ -92,9 +97,9 @@ layout_inicio('Ronda de hoje', date('d/m'));
 </div>
 
 <div class="rondas">
-  <?php foreach (RONDAS as $numero => $horario): ?>
+  <?php foreach ($rondas as $numero => $ronda): ?>
     <a class="ronda <?= $numero === $rondaSelecionada ? 'ativa' : '' ?>" href="index.php?page=ronda&ronda=<?= $numero ?>">
-      <strong><?= $horario ?></strong>
+      <strong><?= e($ronda['horario']) ?></strong>
       <span><?= $porRonda[$numero] ?> feitos</span>
       <em><?= $numero === ronda_atual() ? 'agora' : '' ?></em>
     </a>
@@ -102,7 +107,7 @@ layout_inicio('Ronda de hoje', date('d/m'));
 </div>
 
 <div class="secao-topo">
-  <h2>Postos · ronda <?= RONDAS[$rondaSelecionada] ?></h2>
+  <h2>Postos · ronda <?= e($rondas[$rondaSelecionada]['horario']) ?></h2>
   <span class="muted">em ordem</span>
 </div>
 

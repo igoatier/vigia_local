@@ -3,6 +3,67 @@ declare(strict_types=1);
 
 const RONDAS = [1 => '00:00', 2 => '02:00', 3 => '04:00'];
 
+function garantir_estrutura_rondas(): void
+{
+    static $pronto = false;
+    if ($pronto) return;
+
+    $pdo = db();
+    $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS rondas (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            nome VARCHAR(100) NOT NULL,
+            horario CHAR(5) NOT NULL,
+            ordem INT UNSIGNED NOT NULL DEFAULT 1,
+            tolerancia_minutos INT UNSIGNED NOT NULL DEFAULT 35,
+            ativo TINYINT(1) NOT NULL DEFAULT 1,
+            criado_por INT UNSIGNED NULL,
+            criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uk_ronda_horario (horario),
+            KEY idx_ronda_ativa_ordem (ativo, ordem),
+            CONSTRAINT fk_ronda_criado_por FOREIGN KEY (criado_por) REFERENCES usuarios (id) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+    $total = (int) $pdo->query('SELECT COUNT(*) FROM rondas')->fetchColumn();
+    if ($total === 0) {
+        $inserir = $pdo->prepare('INSERT INTO rondas (id, nome, horario, ordem, tolerancia_minutos, ativo) VALUES (?, ?, ?, ?, 35, 1)');
+        foreach ([1 => ['Ronda 00:00', '00:00'], 2 => ['Ronda 02:00', '02:00'], 3 => ['Ronda 04:00', '04:00']] as $id => [$nome, $horario]) {
+            $inserir->execute([$id, $nome, $horario, $id]);
+        }
+    }
+    $pronto = true;
+}
+
+function rondas_ativas(): array
+{
+    garantir_estrutura_rondas();
+    $stmt = db()->query('SELECT * FROM rondas WHERE ativo = 1 ORDER BY ordem, horario, id');
+    $rondas = [];
+    foreach ($stmt->fetchAll() as $ronda) {
+        $rondas[(int) $ronda['id']] = $ronda;
+    }
+    return $rondas;
+}
+
+function rondas_todas(): array
+{
+    garantir_estrutura_rondas();
+    $stmt = db()->query('SELECT * FROM rondas ORDER BY ordem, horario, id');
+    $rondas = [];
+    foreach ($stmt->fetchAll() as $ronda) {
+        $rondas[(int) $ronda['id']] = $ronda;
+    }
+    return $rondas;
+}
+
+function ronda_configuracao(int $id, bool $somenteAtiva = true): ?array
+{
+    $rondas = $somenteAtiva ? rondas_ativas() : rondas_todas();
+    return $rondas[$id] ?? null;
+}
+
 function e(?string $valor): string
 {
     return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
@@ -16,17 +77,17 @@ function redirecionar(string $url): void
 
 function ronda_atual(?string $dataHora = null): int
 {
-    $hora = (int) date('G', $dataHora ? strtotime($dataHora) : time());
-    if ($hora >= 23 || $hora < 1) {
-        return 1;
+    $rondas = rondas_ativas();
+    if (!$rondas) return 1;
+    $horaAtual = date('H:i', $dataHora ? strtotime($dataHora) : time());
+    $primeira = (int) array_key_first($rondas);
+    $selecionada = $primeira;
+    foreach ($rondas as $id => $ronda) {
+        if ((string) $ronda['horario'] <= $horaAtual) {
+            $selecionada = (int) $id;
+        }
     }
-    if ($hora < 3) {
-        return 2;
-    }
-    if ($hora < 5) {
-        return 3;
-    }
-    return 1;
+    return $selecionada;
 }
 
 // Noite de trabalho: 18h até a manhã seguinte pertence ao mesmo turno.

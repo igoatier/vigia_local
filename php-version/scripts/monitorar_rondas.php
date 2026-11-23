@@ -15,20 +15,31 @@ garantir_estrutura_alertas();
 $pdo = db();
 $agora = new DateTimeImmutable('now');
 $turnoData = turno_data($agora->format('Y-m-d H:i:s'));
-$horariosLimite = [1 => '00:35', 2 => '02:35', 3 => '04:35'];
+$rondasAtivas = rondas_ativas();
 
 $argumentoRonda = null;
 foreach ($argv as $argumento) {
-    if (preg_match('/^--ronda=([123])$/', $argumento, $m)) {
+    if (preg_match('/^--ronda=(\d+)$/', $argumento, $m)) {
         $argumentoRonda = (int) $m[1];
     }
 }
 
-$rondas = $argumentoRonda ? [$argumentoRonda] : array_keys($horariosLimite);
+$rondas = $argumentoRonda ? [$argumentoRonda] : array_keys($rondasAtivas);
 $relatorio = [];
 
 foreach ($rondas as $ronda) {
-    $limite = new DateTimeImmutable($agora->format('Y-m-d') . ' ' . $horariosLimite[$ronda] . ':00');
+    $rondaConfiguracao = $rondasAtivas[$ronda] ?? ronda_configuracao($ronda);
+    if (!$rondaConfiguracao) {
+        $relatorio[] = 'Ronda ' . $ronda . ': horário inexistente ou desativado.';
+        continue;
+    }
+    // Horários da madrugada pertencem ao dia seguinte do turno noturno.
+    $horaRonda = (int) substr((string) $rondaConfiguracao['horario'], 0, 2);
+    $dataRonda = $horaRonda < 12
+        ? (new DateTimeImmutable($turnoData))->modify('+1 day')->format('Y-m-d')
+        : $turnoData;
+    $limite = new DateTimeImmutable($dataRonda . ' ' . $rondaConfiguracao['horario'] . ':00');
+    $limite = $limite->modify('+' . (int) $rondaConfiguracao['tolerancia_minutos'] . ' minutes');
     if (!$argumentoRonda && $agora < $limite) continue;
 
     $pendentesStmt = $pdo->prepare(
@@ -44,7 +55,7 @@ foreach ($rondas as $ronda) {
     $pendentesStmt->execute([$turnoData, $ronda]);
     $pendentes = $pendentesStmt->fetchAll();
     if (!$pendentes) {
-        $relatorio[] = 'Ronda ' . RONDAS[$ronda] . ': concluída.';
+        $relatorio[] = 'Ronda ' . $rondaConfiguracao['horario'] . ': concluída.';
         continue;
     }
 
@@ -67,7 +78,7 @@ foreach ($rondas as $ronda) {
     $nomesPendentes = array_map(static fn (array $posto): string => (string) $posto['nome'], $pendentes);
     $quantidade = count($nomesPendentes);
     $responsavelNome = $responsavel['nome'] ?? 'Nenhum vigia identificado (nenhum registro foi realizado)';
-    $mensagem = 'Ronda ' . RONDAS[$ronda] . ' atrasada: ' . $quantidade . ' posto(s) pendente(s).';
+    $mensagem = 'Ronda ' . $rondaConfiguracao['horario'] . ' atrasada: ' . $quantidade . ' posto(s) pendente(s).';
 
     $inserir = $pdo->prepare(
         'INSERT IGNORE INTO alertas_ronda
@@ -84,7 +95,7 @@ foreach ($rondas as $ronda) {
     ]);
 
     if ($inserir->rowCount() === 0) {
-        $relatorio[] = 'Ronda ' . RONDAS[$ronda] . ': alerta já existente.';
+        $relatorio[] = 'Ronda ' . $rondaConfiguracao['horario'] . ': alerta já existente.';
         continue;
     }
 
@@ -93,7 +104,7 @@ foreach ($rondas as $ronda) {
         "SELECT email FROM usuarios WHERE ativo = 1 AND papel IN ('admin', 'moderador') AND email <> ''"
     );
     $destinatarios = $destinatariosStmt->fetchAll(PDO::FETCH_COLUMN);
-    $corpo = "A ronda das " . RONDAS[$ronda] . " não foi concluída dentro do prazo de 35 minutos.\n\n"
+    $corpo = "A ronda das " . $rondaConfiguracao['horario'] . " não foi concluída dentro do prazo de " . (int) $rondaConfiguracao['tolerancia_minutos'] . " minutos.\n\n"
         . "Data do turno: " . date('d/m/Y', strtotime($turnoData)) . "\n"
         . "Vigia responsável: " . $responsavelNome . "\n"
         . "Responsável definido pela: " . $responsavelFonte . "\n"
@@ -101,12 +112,12 @@ foreach ($rondas as $ronda) {
         . "Quantidade de postos pendentes: " . $quantidade . "\n\n"
         . "Postos pendentes:\n- " . implode("\n- ", $nomesPendentes) . "\n\n"
         . "Acesse o VigiaCheck para registrar uma justificativa ou resolver o alerta.";
-    $enviados = alertas_email('VigiaCheck - Ronda ' . RONDAS[$ronda] . ' atrasada', $corpo, $destinatarios);
+    $enviados = alertas_email('VigiaCheck - Ronda ' . $rondaConfiguracao['horario'] . ' atrasada', $corpo, $destinatarios);
     if ($enviados > 0) {
         $pdo->prepare('UPDATE alertas_ronda SET email_enviado_em = NOW() WHERE id = ?')->execute([$alertaId]);
     }
 
-    $relatorio[] = 'Ronda ' . RONDAS[$ronda] . ': alerta criado; responsável pela ' . $responsavelFonte . '; ' . $enviados . ' e-mail(s) enviado(s).';
+    $relatorio[] = 'Ronda ' . $rondaConfiguracao['horario'] . ': alerta criado; responsável pela ' . $responsavelFonte . '; ' . $enviados . ' e-mail(s) enviado(s).';
 }
 
 echo implode(PHP_EOL, $relatorio) . PHP_EOL;

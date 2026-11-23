@@ -428,6 +428,10 @@ textarea { resize: vertical; }
 .escala-grid label { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .escala-grid label > span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .escala-form .btn { margin-top: 2px; }
+.horario-item { display: flex; flex-direction: column; gap: 12px; }
+.horario-resumo { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.horario-resumo h3 { margin: 0 0 5px; font-size: 16px; }
+.horario-inativo { opacity: 0.62; }
 
 .filtros { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
 

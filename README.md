@@ -14,7 +14,7 @@ http://localhost/vigia_local/php-version/index.php
 
 ## 1. Visão geral da V2
 
-O VigiaCheck permite que vigias registrem a passagem por postos de vigilância durante três rondas noturnas. Cada registro pode conter fotografia, localização GPS, precisão, distância até o posto e observação.
+O VigiaCheck permite que vigias registrem a passagem por postos de vigilância durante vários horários de ronda noturna. Cada registro pode conter fotografia, localização GPS, precisão, distância até o posto e observação.
 
 A V2 moderniza a aplicação para uso em celular e inclui:
 
@@ -25,7 +25,8 @@ A V2 moderniza a aplicação para uso em celular e inclui:
 - Captura automática de câmera ao registrar um posto;
 - Captura de localização com alta precisão e tentativas graduais;
 - Compressão da fotografia no aparelho antes do envio;
-- Avanço automático entre as rondas de `00:00`, `02:00` e `04:00`;
+- Horários de ronda configuráveis pelo administrador, com os padrões `00:00`, `02:00` e `04:00`;
+- Avanço automático entre todos os horários ativos cadastrados;
 - Controle de postos concluídos e pendentes;
 - Histórico administrativo;
 - Exclusão de registros restrita ao administrador;
@@ -116,7 +117,8 @@ php-version/
 │   ├── 002_add_sync_id.sql
 │   ├── 003_alertas_ronda.sql
 │   ├── 004_escala_semanal.sql
-│   └── 005_foto_local_posto.sql
+│   ├── 005_foto_local_posto.sql
+│   └── 006_rondas_configuraveis.sql
 ├── lib/
 │   ├── alertas.php             # Alertas, e-mail e escala semanal
 │   ├── auth.php                # Sessão, autenticação e permissões
@@ -128,6 +130,7 @@ php-version/
 │   └── monitorar_rondas.php    # Verificação automática das rondas
 ├── views/
 │   ├── alertas.php             # Alertas e configuração da escala
+│   ├── horarios.php            # Horários de ronda, somente administrador
 │   ├── equipe.php              # Usuários e perfis
 │   ├── historico.php           # Histórico administrativo
 │   ├── layout.php              # Layout, menu e recursos PWA

@@ -4,7 +4,12 @@ declare(strict_types=1);
 require __DIR__ . '/layout.php';
 
 $postoId = (int) ($_GET['posto'] ?? 0);
-$ronda = isset($_GET['ronda']) ? max(1, min(3, (int) $_GET['ronda'])) : ronda_atual();
+$ronda = isset($_GET['ronda']) ? (int) $_GET['ronda'] : ronda_atual();
+$rondaConfiguracao = ronda_configuracao($ronda);
+if (!$rondaConfiguracao) {
+    flash('erro', 'Horário de ronda inválido ou desativado.');
+    redirecionar('index.php?page=ronda');
+}
 
 $stmt = db()->prepare('SELECT * FROM postos WHERE id = ? AND ativo = 1');
 $stmt->execute([$postoId]);
@@ -16,7 +21,7 @@ if (!$posto) {
 }
 
 $abrirCamera = isset($_GET['camera']) && $_GET['camera'] === '1';
-layout_inicio('Registrar ponto', 'Ronda ' . RONDAS[$ronda]);
+layout_inicio('Registrar ponto', 'Ronda ' . $rondaConfiguracao['horario']);
 ?>
 <section class="card">
   <h2 class="card-titulo"><?= e($posto['nome']) ?></h2>

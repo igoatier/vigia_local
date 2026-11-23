@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/layout.php';
 
 $ehAdmin = eh_admin();
+$rondasConfiguradas = rondas_todas();
 $vigiaFiltro = $ehAdmin ? (int) ($_GET['vigia'] ?? 0) : (int) usuario_atual()['id'];
 $postoFiltro = (int) ($_GET['posto'] ?? 0);
 
@@ -84,7 +85,7 @@ layout_inicio('Histórico', count($registros) . (count($registros) === 1 ? ' reg
           <?php
             $rondaHorario = !empty($registro['ronda_horario'])
                 ? $registro['ronda_horario']
-                : (RONDAS[(int) ($registro['ronda'] ?? 0)] ?? RONDAS[ronda_atual($registro['criado_em'])]);
+                : ($rondasConfiguradas[(int) ($registro['ronda'] ?? 0)]['horario'] ?? ($rondasConfiguradas[ronda_atual($registro['criado_em'])]['horario'] ?? '—'));
           ?>
           <article class="historico-item">
             <a href="index.php?page=foto&id=<?= (int) $registro['id'] ?>" target="_blank" rel="noopener noreferrer" title="Ver foto original">
